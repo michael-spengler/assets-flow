@@ -5,6 +5,7 @@
 
 
 import Web3 from 'https://deno.land/x/web3/mod.ts'
+import { UnitConverter } from "https://deno.land/x/units/mod-ethereum-blockchain.ts";
 
 export class AssetsFlow {
 
@@ -37,9 +38,13 @@ export class AssetsFlow {
         const txCount = await this.web3.eth.getTransactionCount(from, "pending")
         const gasPrice = await this.web3.eth.getGasPrice()
 
+        console.log(gasPrice)
+        const resultInEther = UnitConverter.convert('Wei', gasPrice, 'Ether')
+        // 20000000000
+        // 667897865
         return {
             nonce: this.web3.utils.numberToHex(txCount),
-            gasLimit: this.web3.utils.numberToHex(33000),
+            gasLimit: this.web3.utils.numberToHex(21000),
             gasPrice: this.web3.utils.toHex(gasPrice),
             from,
             to,
@@ -52,6 +57,7 @@ export class AssetsFlow {
 
     public async signAndSend(transactionObject: any, senderPrivateKey: string) {
 
+        console.log(senderPrivateKey)
         const signedTransaction = await this.web3.eth.accounts.signTransaction(transactionObject, senderPrivateKey)
 
         this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction)
