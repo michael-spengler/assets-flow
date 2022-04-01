@@ -16,39 +16,43 @@ export class AssetsFlow {
     }
 
     public async flow(fromWallet: string, toWallet: string, amountInETH: number, chainId: string) {
-        const amountInWei = amountInETH * 1000000000000000000
 
-        let transactionObject
-        try {
-            transactionObject = await this.getTransactionObject(fromWallet, toWallet, amountInWei, chainId)
-        } catch (error) {
-            console.log(`error while getting the transaction object: ${error.message}`)
-        }
+        const balance = await this.web3.eth.getBalance(fromWallet)
 
-        try {
-            await this.signAndSend(transactionObject, this.privateKeyOfSender)
-        } catch (error) {
-            console.log(`error while signing and sending the transaction: ${error.message}`)
-        }
+        console.log(balance)
+
+        // let transactionObject
+        // try {
+        //     transactionObject = await this.getTransactionObject(fromWallet, toWallet, amountInETH, chainId)
+        // } catch (error) {
+        //     console.log(`error while getting the transaction object: ${error.message}`)
+        // }
+
+        // try {
+        //     await this.signAndSend(transactionObject, this.privateKeyOfSender)
+        // } catch (error) {
+        //     console.log(`error while signing and sending the transaction: ${error.message}`)
+        // }
     }
 
 
-    public async getTransactionObject(from: string, to: string, amountInWei: number, chainId: string) {
+    public async getTransactionObject(from: string, to: string, amountInETH: number, chainId: string) {
 
         const txCount = await this.web3.eth.getTransactionCount(from, "pending")
         const gasPrice = await this.web3.eth.getGasPrice()
 
         console.log(gasPrice)
-        const resultInEther = UnitConverter.convert('Wei', gasPrice, 'Ether')
-        // 20000000000
-        // 667897865
+
+        const amountInWei = UnitConverter.convert('Ether', amountInETH, 'Wei')
+        console.log("amountInWei", amountInWei)
+
         return {
             nonce: this.web3.utils.numberToHex(txCount),
             gasLimit: this.web3.utils.numberToHex(21000),
             gasPrice: this.web3.utils.toHex(gasPrice),
             from,
             to,
-            value: amountInWei,
+            value: this.web3.utils.toBN(this.web3.utils.toHex(amountInWei)),
             chainId,
         }
 
@@ -58,6 +62,7 @@ export class AssetsFlow {
     public async signAndSend(transactionObject: any, senderPrivateKey: string) {
 
         console.log(senderPrivateKey)
+        console.log(transactionObject)
         const signedTransaction = await this.web3.eth.accounts.signTransaction(transactionObject, senderPrivateKey)
 
         this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction)
